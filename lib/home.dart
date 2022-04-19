@@ -16,6 +16,9 @@ class _HomeState extends State<Home> {
   //Lista vazia
   late List _listaTarefas = [];
 
+  // Map para recuperar o item que está sendo excluido
+  Map<String, dynamic> _ultimaTarefaRemovida = Map();
+
   //Instanciando o controlle tarefa
   TextEditingController _controllerTarefa = TextEditingController();
 
@@ -65,21 +68,47 @@ class _HomeState extends State<Home> {
 
   Widget _criarItemLista(context, index){
 
-    final item = _listaTarefas[index]['titulo'];
+    // final item não dá para ser usado para recuperar o dado
+    //final item = _listaTarefas[index]['titulo'];
 
     return Dismissible(
-      key: Key( item ),
+      key: Key( DateTime.now().millisecondsSinceEpoch.toString() ),
       direction: DismissDirection.endToStart,
       onDismissed: (direction){
         
-        //Remover o item da lista
+        // recuperar último item excluído
+        _ultimaTarefaRemovida = _listaTarefas[index];
+
+        // Remover o item da lista e salvar a lista
         _listaTarefas.removeAt(index);
         _salvarArquivo();
-        
+
+        // Snackbar
+        final snackbar =  SnackBar(
+          //backgroundColor: Colors.orange,
+          duration: const Duration(seconds: 5),
+          content: const Text('Tarefa removida!'),
+          action: SnackBarAction(
+            label: "Desfazer",
+            onPressed: (){
+
+              // Insere novamente item removido na lista
+              setState(() {
+                _listaTarefas.insert(index, _ultimaTarefaRemovida);  
+              });              
+              _salvarArquivo();
+
+
+            },
+          ),
+        );
+
+        Scaffold.of(context).showSnackBar(snackbar);
+
       },
       background: Container(
         color: Colors.red,
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: const <Widget>[
@@ -119,6 +148,7 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
 
     _salvarArquivo();
+    //print('itens: ' + DateTime.now().millisecondsSinceEpoch.toString() );
 
     return Scaffold(
 
